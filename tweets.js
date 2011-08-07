@@ -301,7 +301,7 @@ function drawWords(words,x,y,color){
         //Sombra
         ictx.fillText(words[i],x+dx+2,y+2,U*2);
 
-        if(searchTerm == words[i]){
+        if(searchTerm.toLowerCase() == words[i].toLowerCase()){
             ictx.fillStyle = "#6c93cb";
         }else if(words[i][0] == "@"){
             ictx.fillStyle = "#ccc";
