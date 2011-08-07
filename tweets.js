@@ -19,7 +19,7 @@ var VEL = 1;
 var FLY_TIME = 1000*VEL;
 var VIEW_TIME = 5000*VEL;
 
-var searchTerm = location.hash || "#fx4madrid";
+var searchTerm = location.hash || "#mozilla";
 
 var pos_map = {};
 var used_tweets = {};

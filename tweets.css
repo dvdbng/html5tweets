@@ -35,20 +35,6 @@ canvas{
     left: 0px;
 }
 
-#help{
-    position: relative;
-    background: no-repeat url(logo.png);
-    color: #fff;
-    padding-left: 105px;
-    margin-top: 10px;
-    margin-left: 10px;
-    height: 100px;
-    background-size: 100px;
-    padding-top:20px;
-    font-size: 14px;
-    z-index: 3;
-}
-
 #load{
     position: absolute;
     left: 50%;
