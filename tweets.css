@@ -10,57 +10,68 @@
 * Full license: http://bengoarocandio.com/html5tweets/COPYING
 * Chicken Dance instructions: http://bengoarocandio.com/html5tweets/DANCE
 */
-
+@charset "UTF-8";
 @font-face {
-	font-family: MuseoSans;
-	src: url('MuseoSans_500.otf');
+  font-family: MuseoSans;
+  src: url("MuseoSans_500.otf");
 }
 
-body,html{
-    font-family: MuseoSans; /* Font prefetch */
-    margin:0;
-    padding:0;
-}
-html{
-    min-height: 100%;
-    /*-moz-transition-property: background-color;
-    -moz-transition-duration: 3s;*/
-}
-h2{
-    margin: 0;
-}
-canvas{
-    position: absolute;
-    top:0px;
-    left: 0px;
+/* line 21, tweets.scss */
+body, html {
+  font-family: MuseoSans;
+  /* Font prefetch */
+  margin: 0;
+  padding: 0;
 }
 
-#credits{
-    position: absolute;
-    bottom: 10px;
-    right: 20px;
-    z-index: 3;
+/* line 26, tweets.scss */
+html {
+  min-height: 100%;
 }
 
-#credits a{
-    color: #fff;
+/* line 29, tweets.scss */
+h2 {
+  margin: 0;
 }
 
-#load{
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 400px;
-    margin-left: -200px;
-    height: 300px;
-    margin-top: -150px;
-    background: top no-repeat url(logo.png);
-    color: #fff;
-    padding-top: 200px;
-    text-align:center;
-    font-size: 40px;
+/* line 32, tweets.scss */
+canvas {
+  position: absolute;
+  top: 0px;
+  left: 0px;
 }
 
-body{
-   background-image: -moz-radial-gradient(center 45deg, cover, #F89F1D 0%, #F25626 100%);
+/* line 38, tweets.scss */
+#credits {
+  position: absolute;
+  bottom: 10px;
+  right: 20px;
+  z-index: 3;
+}
+
+/* line 45, tweets.scss */
+#credits a {
+  color: #fff;
+}
+
+/* line 49, tweets.scss */
+#load {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 400px;
+  margin-left: -200px;
+  height: 300px;
+  margin-top: -150px;
+  background: top no-repeat url(logo.png);
+  color: #fff;
+  padding-top: 200px;
+  text-align: center;
+  font-size: 40px;
+}
+
+/* line 64, tweets.scss */
+body {
+  background-image: -moz-radial-gradient(center 45deg, cover, #f89f1d 0%, #f25626 100%);
+  background-image: -webkit-gradient(radial, center center, 10, center center, 1300, from(#f89f1d), to(#f25626));
 }

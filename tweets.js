@@ -24,6 +24,7 @@ var searchTerm = location.hash || "#mozilla";
 var pos_map = {};
 var used_tweets = {};
 var avaliableTweets = [];
+var avaliablePhotos = [];
 var alphaAnimating = [];
 var avaliableTweetsLastUpdated = 0;
 var bannerVisible = true;
@@ -106,7 +107,6 @@ for(var x = 1; x<=9; ++x){
 
 
 
-
 var $canvas = $("canvas"),
     canvas = $canvas[0],
     ctx = canvas.getContext("2d"),
@@ -124,42 +124,66 @@ function updateCanvasSize(){
         width: cwidth,
         height: cheight
     });
-    scheduleAnimationFrame();
+    scheduleAnimationFrame(render);
+}
+
+function avaliableCount() {
+    return avaliablePhotos.length + avaliableTweets.length;
+}
+
+var lastFlickr = false; // True if last obj was a photo
+function nextAvaliable(){
+    if(avaliablePhotos.length && avaliableTweets.length){
+        lastFlickr = !lastFlickr;
+        return (lastFlickr?avaliablePhotos:avaliableTweets).shift();
+    }else{
+        return (avaliablePhotos.length && avaliablePhotos.shift()) ||
+               (avaliableTweets.length && avaliableTweets.shift())
+    }
 }
 
 function insertarOrdenado(twt){
-    var ins = false;
-    for(var i=0, l=avaliableTweets.length; i<l; ++i){
-        if(twt.id > avaliableTweets[i].id){
+    var ins = false, objList = twt.flickr?avaliablePhotos:avaliableTweets;
+    for(var i=0, l=objList.length; i<l; ++i){
+        if(twt.id > objList[i].id){
             ins = true;
-            avaliableTweets.splice(i,0,twt);
+            objList.splice(i,0,twt);
             break;
         }
     }
-    !ins && avaliableTweets.push(twt);
+    !ins && objList.push(twt);
     avaliableTweetsUpdated();
 }
+function addTweets(flickr, data){
 
+    var res = flickr?data["photos"]["photo"]:data["results"];
+
+    for(var i = 0; i<res.length;++i){
+        var tweet = res[i];
+        if(tweet.id in used_tweets && avaliableCount() > 0)continue;
+        tweet.flickr = flickr;
+        var img = new Image();
+        tweet["imgelm"] = img;
+        img.onload = (function(twt){return function(){
+            if(bannerVisible){
+                $("#load").fadeOut();
+                bannerVisible = false;
+            }
+            insertarOrdenado(twt);
+        }})(tweet);
+
+        if(flickr){
+            img.src = "http://farm" + tweet.farm + ".staticflickr.com/" + tweet.server + "/" + tweet.id + "_" + tweet.secret + "_z.jpg";
+        }else{
+            img.src = tweet[flickr?"":"profile_image_url"];
+        }
+    }
+}
 function loadTweets(){
     avaliableTweetsLastUpdated = +new Date();
     var baseUrl = "http://search.twitter.com/search.json?q=";
-    $.getJSON(baseUrl + encodeURIComponent(searchTerm) + "&rpp=45&result_type=recent&callback=?", function(data){
-        var res = data["results"];
-        for(var i = 0; i<res.length;++i){
-            var tweet = res[i];
-            if(tweet.id in used_tweets && avaliableTweets.length > 0)continue;
-            var img = new Image();
-            tweet["imgelm"] = img;
-            img.onload = (function(twt){return function(){
-                if(bannerVisible){
-                    $("#load").fadeOut();
-                    bannerVisible = false;
-                }
-                insertarOrdenado(twt);
-            }})(tweet);
-            img.src = res[i]["profile_image_url"];
-        }
-    });
+    $.getJSON(baseUrl + encodeURIComponent(searchTerm) + "&rpp=45&result_type=recent&callback=?", addTweets.bind(this, false));
+    $.getJSON("http://api.flickr.com/services/rest/?method=flickr.photos.search&tags=" + encodeURIComponent(searchTerm) + "&format=json&api_key=8a1a30adce6e6eb4600f0fae518f31aa&jsoncallback=?", addTweets.bind(this, true));
 }
 
 function isEmpty(x,y){
@@ -264,19 +288,19 @@ function avaliableTweetsUpdated(){
     if(new Date()-avaliableTweetsLastUpdated > 30000){
         loadTweets();
     }
-    if(avaliableTweets.length==0)return;
+    if(avaliableCount() === 0)return;
 
     if(!actualTweet){
         var ph = tweet_holders[8];
-        ph.tweet = avaliableTweets.shift();
+        ph.tweet = nextAvaliable();
         actualTweet = ph;
         actualTweetBorn = +new Date();
         ph.tweet.born = actualTweetBorn;
         alphaAnimating.push([ph,0,1,actualTweetBorn,800]);
-        scheduleAnimationFrame();
+        scheduleAnimationFrame(render);
     }else if(new Date()-actualTweetBorn > VIEW_TIME){
         var ph = getEmptyPlaceholder();
-        ph.tweet = avaliableTweets.shift();
+        ph.tweet = nextAvaliable();
         previousTweet = actualTweet;
         actualTweet = ph;
         actualTweetAnimating = true;
@@ -287,7 +311,7 @@ function avaliableTweetsUpdated(){
         alphaAnimating.push([previousTweet,1,0.5,actualTweetBorn,400]);
 
         freePlaceholdersIfNeeded();
-        scheduleAnimationFrame();
+        scheduleAnimationFrame(render);
     }
 }
 
@@ -318,6 +342,13 @@ function drawWords(words,x,y,color){
 
 function renderTweet(tweet,x,y,op){
     ictx.globalAlpha=op;
+    if(tweet.flickr){
+        var iw = tweet.imgelm.width, ih= tweet.imgelm.height;
+        var h = Math.min(U, ih, (ih/iw)*(2*U));
+        var w = Math.min(2*U, iw, (iw/ih)*U);
+        ictx.drawImage(tweet.imgelm, x+(600-w)/2, y+(300-h)/2, w, h);
+        return;
+    }
     var font_size = 30, padded_font_size = font_size+5;
     var words = tweet["text"].split(/\s+/);
     ictx.fillStyle = "#000";
@@ -395,7 +426,7 @@ function render(){
     ctx.drawImage(icanvas,0,0);
 
     ctx.restore();
-    if(actualTweetAnimating || alphaAnimating.length > 0)scheduleAnimationFrame();
+    if(actualTweetAnimating || alphaAnimating.length > 0)scheduleAnimationFrame(render);
 }
 window.addEventListener("MozBeforePaint", render, false);
 
@@ -433,8 +464,12 @@ function prettyDate(time){
 		day_diff < 31 && "Hace " + Math.ceil( day_diff / 7 ) + " semanas";
 }
 var scheduleAnimationFrame = window.mozRequestAnimationFrame ||
-    function(){
-        setTimeout(render,30);
+    window.webkitRequestAnimationFrame ||
+    window.oRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    window.requestAnimationFrame ||
+    function(callback){
+        setTimeout(callback,30);
     };
 
 init();
